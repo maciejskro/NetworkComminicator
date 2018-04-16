@@ -2,14 +2,17 @@ package com.sda.encrypt;
 
 public class CipherFactory {
 
+    private static Cipher cipher;
+
     public static Cipher create(String algorithm) {
 
         if ("Caesar" . equals(algorithm)) {
-            return new CesarCipher(45);
+            cipher = new CesarCipher(45);
         } else if ("AES".equals(algorithm)) {
-            return new AESCipher("string");
+            cipher = new AESCipher("string");
         } else {
             throw new IllegalArgumentException("Unknown algorithm");
         }
+        return cipher;
     }
 }
