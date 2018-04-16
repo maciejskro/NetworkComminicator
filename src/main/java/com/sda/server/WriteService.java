@@ -1,5 +1,6 @@
 package com.sda.server;
 
+import com.sda.client.ContactList;
 import com.sda.encrypt.Cipher;
 import com.sda.encrypt.CipherFactory;
 
@@ -28,15 +29,17 @@ public class WriteService implements Runnable {
 
     @Override
     public void run() {
-        try ( PrintWriter printWriter = new PrintWriter(clientSocket.getOutputStream()) ) {
-            presentMe(printWriter);
+        try ( ObjectOutputStream printWriter = new ObjectOutputStream(clientSocket.getOutputStream()) ) {
+            //presentMe(printWriter);
 
             while (clientSocket.isConnected()) {
                 //Odczytaj linijke od klienta
                 System.out.println("Send message: ");
                 String line = this.scan.nextLine();
                 //Odpowiedz do klienta
-                printWriter.println("Response from client: " + line);
+                ContactList cl = new ContactList(null, line);
+                printWriter.writeObject(cl);
+                //printWriter.println("Response from client: " + line);
                 //flush - wypchnij z bufora
                 printWriter.flush();
             }

@@ -1,7 +1,12 @@
 package com.sda.server;
 
+import com.sda.client.ContactList;
+
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,13 +34,15 @@ public class EchoServer  {
         ExecutorService executorService = Executors.newFixedThreadPool(20);
         EchoServer echoServer = new EchoServer();
 
-        while (echoServer.clientPool.size()>=2) {
+        while (true) {
 
             System.out.println("Waiting for client...");
             //Czekaj na klienta
 
             Socket socket1 = serverSocket.accept();
             Socket socket2 = serverSocket.accept();
+
+            echoServer.sendAvailableClients();
 
             //Thread thread = new Thread(new RunnableServers(socket));
             //thread.start();
@@ -44,6 +51,18 @@ public class EchoServer  {
             // executorService.submit(new ReaderService(socket));
             // executorService.submit(new WriteService(socket));
             echoServer.createCommunication(executorService,socket1, socket2, echoServer.clientPool );
+        }
+    }
+
+    private void sendAvailableClients() throws IOException {
+        ContactList cl = new ContactList(new ArrayList<>(clientPool.keySet()), null);
+        if (clientPool.size() > 0 ) {
+            for (String s: clientPool.keySet()) {
+                OutputStream output = clientPool.get(s).getOutputStream();
+                ObjectOutputStream pw = new ObjectOutputStream(output);
+                pw.writeObject(cl);
+            }
+
         }
     }
 

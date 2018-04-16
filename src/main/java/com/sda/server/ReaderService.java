@@ -1,10 +1,9 @@
 package com.sda.server;
 
+import com.sda.client.ContactList;
 import com.sda.encrypt.CipherFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
 import com.sda.encrypt.Cipher;
 
@@ -18,21 +17,29 @@ public class ReaderService implements Runnable {
         this.encrption = CipherFactory.create("Ceasar");
     }
 
+    public ObjectInputStream getListAvailableClients() throws IOException{
+        ObjectInputStream result = null;
+
+        return result;
+    }
+
     @Override
     public void run() {
 
         // Cipher
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(this.clientSocket.getInputStream())))
+        try (ObjectInputStream reader = new ObjectInputStream(this.clientSocket.getInputStream()))
         {
-            String line = null;
-            String key = reader.readLine();
+            ContactList line = null;
+            //String key = reader.readObject();
 
-            while (( line = reader.readLine() ) != null ) {
+            while (( line = (ContactList) reader.readObject() ) != null ) {
                 System.out.println("Received: " + line);
             }
         }
         catch (IOException e) {
             System.out.println("error" );
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 
