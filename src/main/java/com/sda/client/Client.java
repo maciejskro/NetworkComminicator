@@ -26,8 +26,8 @@ public class Client {
 
             //Tworzymy gniazdo do polaczenia z serwerem
             Socket socket = new Socket(host,port);
-            WriteService writeService = new WriteService(socket);
-            writeService.presentMe(""+rand.nextInt(65535));
+            WriteService writeService = new WriteService(socket, "ClientName" + (rand.nextInt(65533)+1));
+
 
             executorService.submit(writeService);
             executorService.submit(new ReaderService(socket));

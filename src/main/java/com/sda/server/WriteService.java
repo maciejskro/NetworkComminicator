@@ -8,25 +8,23 @@ public class WriteService implements Runnable {
 
     private Socket clientSocket;
     private Scanner scan;
+    private String name;
 
-
-    public WriteService(Socket clientSocket) {
+    public WriteService(Socket clientSocket, String name) {
         this.clientSocket = clientSocket;
         this.scan  = new Scanner(System.in);
     }
 
-    public void presentMe(String name) {
-        try( PrintWriter printWriter = new PrintWriter(clientSocket.getOutputStream())) {
+    public void presentMe(String name, PrintWriter printWriter) {
             printWriter.println("myname:" + name);
             printWriter.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
     public void run() {
         try ( PrintWriter printWriter = new PrintWriter(clientSocket.getOutputStream()) ) {
+            presentMe(name, printWriter);
+
             while (clientSocket.isConnected()) {
                 //Odczytaj linijke od klienta
                 System.out.println("Send message: ");
