@@ -1,6 +1,7 @@
 package com.sda.server;
 
 import com.sda.encrypt.Cipher;
+import com.sda.encrypt.CipherFactory;
 
 import java.io.*;
 import java.net.Socket;
@@ -11,12 +12,13 @@ public class WriteService implements Runnable {
     private Socket clientSocket;
     private Scanner scan;
     private String name;
-    private Cipher cipher;
+    private Cipher encrypt;
 
     public WriteService(Socket clientSocket, String name) {
         this.clientSocket = clientSocket;
         this.scan  = new Scanner(System.in);
         this.name = name;
+        this.encrypt = CipherFactory.create("Cesar");
     }
 
     public void presentMe(PrintWriter printWriter) {
@@ -32,7 +34,7 @@ public class WriteService implements Runnable {
             while (clientSocket.isConnected()) {
                 //Odczytaj linijke od klienta
                 System.out.println("Send message: ");
-                String line = cipher.encrypt(this.scan.nextLine());
+                String line = this.scan.nextLine();
                 //Odpowiedz do klienta
                 printWriter.println("Response from client: " + line);
                 //flush - wypchnij z bufora

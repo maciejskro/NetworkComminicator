@@ -1,10 +1,12 @@
 package com.sda.server;
 
-import javax.crypto.Cipher;
+import com.sda.encrypt.CipherFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import com.sda.encrypt.Cipher;
 
 public class ReaderService implements Runnable {
 
@@ -13,6 +15,7 @@ public class ReaderService implements Runnable {
 
     public ReaderService(Socket clientSocket) {
         this.clientSocket = clientSocket;
+        this.encrption = CipherFactory.create("Ceasar");
     }
 
     @Override
