@@ -29,11 +29,10 @@ public class EchoServer  {
         ExecutorService executorService = Executors.newFixedThreadPool(20);
         EchoServer echoServer = new EchoServer();
 
-        while (true) {
+        while (echoServer.clientPool.size()>=2) {
 
             System.out.println("Waiting for client...");
             //Czekaj na klienta
-
 
             Socket socket1 = serverSocket.accept();
             Socket socket2 = serverSocket.accept();
@@ -49,8 +48,11 @@ public class EchoServer  {
     }
 
     public void createCommunication(ExecutorService ee , Socket input, Socket output, Map<String,Socket> clientMap)  {
-            ee.submit(new TaskHandlerProxy(input, output, clientMap) );
-            ee.submit(new TaskHandlerProxy(output, input, clientMap) );
+
+            if (clientMap.size() >= 2) {
+                ee.submit(new TaskHandlerProxy(input, output, clientMap));
+                ee.submit(new TaskHandlerProxy(output, input, clientMap));
+            }
     }
 
 }

@@ -28,7 +28,6 @@ public class Client {
             Socket socket = new Socket(host,port);
             WriteService writeService = new WriteService(socket, "ClientName" + (rand.nextInt(65533)+1));
 
-
             executorService.submit(writeService);
             executorService.submit(new ReaderService(socket));
 

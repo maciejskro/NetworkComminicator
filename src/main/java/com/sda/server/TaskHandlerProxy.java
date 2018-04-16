@@ -26,6 +26,7 @@ public class TaskHandlerProxy implements Runnable {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(this.inputStream.getInputStream()));
              PrintWriter printWriter = new PrintWriter(this.outputStream.getOutputStream())) {
             String name = reader.readLine();
+            System.out.println(name);
             clientMaps.put(name,inputStream );
             // wysłanie klucza
             printWriter.println("klucz");
