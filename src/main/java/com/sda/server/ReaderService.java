@@ -14,7 +14,7 @@ public class ReaderService implements Runnable {
 
     public ReaderService(Socket clientSocket) {
         this.clientSocket = clientSocket;
-        this.encrption = CipherFactory.create("Ceasar");
+        this.encrption = CipherFactory.create("Caesar");
     }
 
     public ObjectInputStream getListAvailableClients() throws IOException{
@@ -32,8 +32,9 @@ public class ReaderService implements Runnable {
             ContactList line = null;
             //String key = reader.readObject();
 
-            while (( line = (ContactList) reader.readObject() ) != null ) {
-                System.out.println("Received: " + line);
+            while (( line = ((ContactList) reader.readObject()) ) != null ) {
+                System.out.println("Received: " + line.getMessageBody());
+                line.getListContact().forEach(x -> System.out.println( "client: " +x));
             }
         }
         catch (IOException e) {

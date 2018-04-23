@@ -6,6 +6,8 @@ import com.sda.encrypt.CipherFactory;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class WriteService implements Runnable {
@@ -17,20 +19,32 @@ public class WriteService implements Runnable {
 
     public WriteService(Socket clientSocket, String name) {
         this.clientSocket = clientSocket;
-        this.scan  = new Scanner(System.in);
+        this.scan = new Scanner(System.in);
         this.name = name;
-        this.encrypt = CipherFactory.create("Cesar");
+        this.encrypt = CipherFactory.create("Caesar");
     }
 
-    public void presentMe(PrintWriter printWriter) {
-            printWriter.println("myname:" + name);
+    public ContactList presentMe(ObjectOutputStream printWriter) {
+        ContactList result = null;
+        try {
+            List<String> names = new ArrayList<>();
+            names.add(this.name);
+            result = new ContactList(names, null);
+
+            printWriter.writeObject(result);
             printWriter.flush();
+            return result;
+        } catch (IOException e) {
+            System.out.println("error");
+            e.printStackTrace();
+        }
+        return result;
     }
 
     @Override
     public void run() {
-        try ( ObjectOutputStream printWriter = new ObjectOutputStream(clientSocket.getOutputStream()) ) {
-            //presentMe(printWriter);
+        try (ObjectOutputStream printWriter = new ObjectOutputStream(clientSocket.getOutputStream())) {
+            presentMe(printWriter);
 
             while (clientSocket.isConnected()) {
                 //Odczytaj linijke od klienta

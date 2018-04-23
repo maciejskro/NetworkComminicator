@@ -6,7 +6,7 @@ public class CipherFactory {
 
     public static Cipher create(String algorithm) {
 
-        if ("Caesar" . equals(algorithm)) {
+        if ("Caesar".equals(algorithm)) {
             cipher = new CesarCipher(45);
         } else if ("AES".equals(algorithm)) {
             cipher = new AESCipher("string");
