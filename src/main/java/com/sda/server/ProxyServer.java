@@ -1,7 +1,6 @@
 package com.sda.server;
 
 import com.sda.client.ContactList;
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -21,6 +20,7 @@ public class ProxyServer implements Runnable {
     private Map<String, Socket> clientPool;
     private Integer simpleKeyCipher;
     private String aesKeyCipher;
+    private ProxyHelper queue;
 
     public ProxyServer() {
         Random random = new Random();
@@ -32,11 +32,11 @@ public class ProxyServer implements Runnable {
 
         //Port na ktorym startuje serwer
         int port = 4444;
-
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.println("Started server on port " + port);
         ExecutorService executorService = Executors.newFixedThreadPool(20);
         ProxyServer proxyServer = new ProxyServer();
+        proxyServer.queue = new ProxyHelper();
 
         while (true) {
 
@@ -46,15 +46,21 @@ public class ProxyServer implements Runnable {
             // zaakceptuj połączenie
             Socket socket1 = proxyServer.acceptClient(serverSocket);
             // odczytaj listę od klienta
-            ContactList cl = proxyServer.getConnectionList(serverSocket);
+            proxyServer.queue.push(proxyServer.getConnectionList(serverSocket));
+
+            //ContactList cl = proxyServer.getConnectionList(serverSocket);
             // dodaj klienta do mapy clintów
-            String currClient = proxyServer.addConnectedClient(cl.getListContact().get(0), socket1);
+            //String currClient = proxyServer.addConnectedClient(cl.getListContact().get(0), socket1);
             // wyslij liste dostępnych klientów oprócz currClient
-            proxyServer.sendAvailableClients(currClient);
+            //proxyServer.sendAvailableClients(currClient);
 
             Socket socket2 = serverSocket.accept();
+            /*
+            oczekuj na akceptacje przyjęcia połączenia
+            jeśli się pojawi to przyjmij pobierz obiekt zapisz na stosie
+            następnie w nowym wątku  weź obiekt ze stosu i wyślij do odpowiednich adresatów
 
-
+             */
 
             //Thread thread = new Thread(new RunnableServers(socket));
             //thread.start();
@@ -66,6 +72,7 @@ public class ProxyServer implements Runnable {
             proxyServer.createCommunication(executorService, socket1, socket2, proxyServer.clientPool);
         }
     }
+
     private  String addConnectedClient(String name , Socket socket) {
         this.clientPool.put(name,socket);
         return  name;
@@ -91,8 +98,10 @@ public class ProxyServer implements Runnable {
         try {
             ObjectInputStream inputStream = new ObjectInputStream(result.getInputStream());
             cl = (ContactList) inputStream.readObject();
+            this.clientPool.put(cl.getListContact().get(0), result);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
+            System.err.println(e.getMessage());
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
@@ -102,14 +111,16 @@ public class ProxyServer implements Runnable {
     private Socket acceptClient(ServerSocket srvsocket) {
         Socket result = null;
         try {
-            result = srvsocket.accept();
+            if ( ! srvsocket.isClosed() ) {
+                result = srvsocket.accept();
+            } else
+                throw  new NullPointerException("Not socket is settup");
         } catch (IOException e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
         }
         return result;
     }
-
 
     public void createCommunication(ExecutorService ee, Socket input, Socket output, Map<String, Socket> clientMap) {
 
@@ -119,9 +130,20 @@ public class ProxyServer implements Runnable {
             ee.submit(new TaskHandlerProxy(output, input, clientMap));
         }
     }
+    private  void sendObject(ExecutorService ee) {
+
+        //ee.submit(new TaskHandlerProxy(null, ));
+    }
+
+    private  ContactList receiveObject() {
+        return null;
+    }
 
     @Override
     public void run() {
+        if ( ! queue.isEmpty()) {
+           // sendObject();
+        }
 
     }
 }
