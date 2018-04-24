@@ -1,56 +1,62 @@
 package com.sda.server;
 
-import java.io.BufferedReader;
+import com.sda.client.ContactList;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class TaskHandlerProxy implements Runnable {
 
     private Socket inputStream;
-    private Socket outputStream;
     private Map<String, Socket> clientMaps;
 
-    public TaskHandlerProxy(Socket input, Socket output, Map<String, Socket> maps) {
+    public TaskHandlerProxy(Socket input, Map<String, Socket> maps) {
         this.inputStream = input;
-        this.outputStream = output;
         this.clientMaps = maps;
     }
 
     @Override
     public void run() {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(this.inputStream.getInputStream()));
-             PrintWriter printWriter = new PrintWriter(this.outputStream.getOutputStream())) {
-            String name = reader.readLine();
-            System.out.println(name);
-            clientMaps.put(name,inputStream );
+        try (ObjectInputStream reader = new ObjectInputStream(this.inputStream.getInputStream()) )  {
+
+            ContactList cl = (ContactList) reader.readObject();
+            ObjectOutputStream printWriter = new ObjectOutputStream(clientMaps.get(cl.getListContact().get(0)).getOutputStream() );
+            System.out.println(cl.getMessageBody());
+            //clientMaps.put(name,inputStream );
             // wysłanie klucza
-            printWriter.println("klucz");
-            while (true) {
-                printWriter.println(reader.readLine());
-                printWriter.flush();
+            printWriter.writeObject("klucz");
+            while (clientMaps.size()>1) {
+                sendMessageToAll(cl);
             }
 
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("error połączenia");
+        } catch (ClassNotFoundException e) {
+            System.err.println("Class ContactList not sended.");
+            e.printStackTrace();
         }
+    }
+    protected void sendMessageToAll(ContactList cl) {
+        try {
+            while (cl.getListContact().size() > 1) {
+                for (int i = 0; i < cl.getListContact().size(); i++) {
+                    Socket socket = clientMaps.get(cl.getListContact().get(i));
+                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                    oos.writeObject(cl);
+                    oos.flush();
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("IO Exception  socket closed or somthings");
+            e.printStackTrace();
+        }
+
     }
 
-    private String readName(Socket socket1) throws IOException {
-        BufferedReader breader = new BufferedReader(new InputStreamReader(socket1.getInputStream()));
-        return breader.readLine();
-    }
-    private void createSocketServer(ServerSocket serverSocket, String name) throws IOException {
-        if ( clientMaps != null) {
-            this.clientMaps = new ConcurrentHashMap<>();
-        }
-        Socket socket = serverSocket.accept();
-        this.clientMaps.put(name, socket);
-    }
 }
 

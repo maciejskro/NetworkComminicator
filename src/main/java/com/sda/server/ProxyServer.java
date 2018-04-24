@@ -17,15 +17,14 @@ import java.util.concurrent.Executors;
 
 public class ProxyServer implements Runnable {
 
-    private Map<String, Socket> clientPool;
     private Integer simpleKeyCipher;
     private String aesKeyCipher;
+    private static final Map<String, Socket> clientPool = new ConcurrentHashMap<>();;
     private ProxyHelper queue;
 
     public ProxyServer() {
         Random random = new Random();
         this.simpleKeyCipher = random.nextInt(65533) + 1;
-        this.clientPool = new ConcurrentHashMap<>();
     }
 
     public static void main(String[] args) throws Exception {
@@ -44,6 +43,7 @@ public class ProxyServer implements Runnable {
             //Czekaj na klienta
 
             // zaakceptuj połączenie
+            // ?????????????
             Socket socket1 = proxyServer.acceptClient(serverSocket);
             // odczytaj listę od klienta
             proxyServer.queue.push(proxyServer.getConnectionList(serverSocket));
@@ -53,6 +53,7 @@ public class ProxyServer implements Runnable {
             //String currClient = proxyServer.addConnectedClient(cl.getListContact().get(0), socket1);
             // wyslij liste dostępnych klientów oprócz currClient
             //proxyServer.sendAvailableClients(currClient);
+            executorService.submit(new ProxyServer());
 
             Socket socket2 = serverSocket.accept();
             /*
@@ -98,7 +99,7 @@ public class ProxyServer implements Runnable {
         try {
             ObjectInputStream inputStream = new ObjectInputStream(result.getInputStream());
             cl = (ContactList) inputStream.readObject();
-            this.clientPool.put(cl.getListContact().get(0), result);
+            clientPool.put(cl.getListContact().get(0), result);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             System.err.println(e.getMessage());
@@ -111,7 +112,7 @@ public class ProxyServer implements Runnable {
     private Socket acceptClient(ServerSocket srvsocket) {
         Socket result = null;
         try {
-            if ( ! srvsocket.isClosed() ) {
+            if ( srvsocket != null | ! srvsocket.isClosed()  ) {
                 result = srvsocket.accept();
             } else
                 throw  new NullPointerException("Not socket is settup");
@@ -141,8 +142,13 @@ public class ProxyServer implements Runnable {
 
     @Override
     public void run() {
-        if ( ! queue.isEmpty()) {
-           // sendObject();
+        ContactList cl = null;
+        while (true) {
+            if ( ! queue.isEmpty()) {
+                cl = queue.pop();
+            }
+
+
         }
 
     }

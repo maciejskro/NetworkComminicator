@@ -8,18 +8,20 @@ public class ProxyHelper  {
 
     private Stack<ContactList> stack;
 
-    public ProxyHelper() {
+    ProxyHelper() {
         this.stack = new Stack<>();
-
     }
-    public ContactList pop() {
+
+    ContactList pop() {
         return stack.pop();
     }
-
-    public void push(ContactList cl) {
+    void push(ContactList cl) {
         this.push(cl);
     }
-    public boolean isEmpty() {
+    boolean isEmpty() {
         return stack.isEmpty();
     }
+
+
+
 }
