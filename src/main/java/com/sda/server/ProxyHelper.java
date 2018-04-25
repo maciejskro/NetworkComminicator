@@ -9,14 +9,14 @@ public class ProxyHelper  {
     private Stack<ContactList> stack;
 
     ProxyHelper() {
-        this.stack = new Stack<>();
+        this.stack = new Stack();
     }
 
     ContactList pop() {
         return stack.pop();
     }
     void push(ContactList cl) {
-        this.push(cl);
+        stack.push(cl);
     }
     boolean isEmpty() {
         return stack.isEmpty();

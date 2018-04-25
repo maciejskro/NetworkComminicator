@@ -20,7 +20,7 @@ public class ProxyServer implements Runnable {
     private Integer simpleKeyCipher;
     private String aesKeyCipher;
     private static final Map<String, Socket> clientPool = new ConcurrentHashMap<>();;
-    private ProxyHelper queue;
+    private static final ProxyHelper queue = new ProxyHelper();
 
     public ProxyServer() {
         Random random = new Random();
@@ -35,7 +35,6 @@ public class ProxyServer implements Runnable {
         System.out.println("Started server on port " + port);
         ExecutorService executorService = Executors.newFixedThreadPool(20);
         ProxyServer proxyServer = new ProxyServer();
-        proxyServer.queue = new ProxyHelper();
 
         while (true) {
 
@@ -44,9 +43,9 @@ public class ProxyServer implements Runnable {
 
             // zaakceptuj połączenie
             // ?????????????
-            Socket socket1 = proxyServer.acceptClient(serverSocket);
+            //Socket socket1 = proxyServer.acceptClient(serverSocket);
             // odczytaj listę od klienta
-            proxyServer.queue.push(proxyServer.getConnectionList(serverSocket));
+            queue.push(proxyServer.getConnectionList(serverSocket));
 
             //ContactList cl = proxyServer.getConnectionList(serverSocket);
             // dodaj klienta do mapy clintów
@@ -70,7 +69,7 @@ public class ProxyServer implements Runnable {
             // executorService.submit(new ReaderService(socket));
             // executorService.submit(new WriteService(socket));
 
-            proxyServer.createCommunication(executorService, socket1, socket2, proxyServer.clientPool);
+            proxyServer.createCommunication(executorService, proxyServer.clientPool);
         }
     }
 
@@ -123,12 +122,12 @@ public class ProxyServer implements Runnable {
         return result;
     }
 
-    public void createCommunication(ExecutorService ee, Socket input, Socket output, Map<String, Socket> clientMap) {
+    public void createCommunication(ExecutorService ee,  Map<String, Socket> clientMap) {
 
         if (clientMap.size() >= 2) {
-            ee.submit(new TaskHandlerProxy(input, output, clientMap));
+            ee.submit(new TaskHandlerProxy( clientMap));
             System.out.println("messages");
-            ee.submit(new TaskHandlerProxy(output, input, clientMap));
+            ee.submit(new TaskHandlerProxy( clientMap));
         }
     }
     private  void sendObject(ExecutorService ee) {
@@ -147,7 +146,15 @@ public class ProxyServer implements Runnable {
             if ( ! queue.isEmpty()) {
                 cl = queue.pop();
             }
-
+            for (String s : clientPool.keySet()) {
+                try {
+                    ObjectOutputStream oos = new ObjectOutputStream(clientPool.get(s).getOutputStream());
+                    oos.writeObject(cl);
+                    oos.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
         }
 
