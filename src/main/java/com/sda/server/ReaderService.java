@@ -5,36 +5,49 @@ import com.sda.encrypt.CipherFactory;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import com.sda.encrypt.Cipher;
 
 public class ReaderService implements Runnable {
 
-    private Socket clientSocket;
+    private Socket serverSocket;
     private Cipher encrption;
+    private CopyOnWriteArrayList<String> availableClientList;
 
-    public ReaderService(Socket clientSocket) {
-        this.clientSocket = clientSocket;
+    public ReaderService(Socket serverSocket, CopyOnWriteArrayList<String> availableClientList) {
+        this.serverSocket = serverSocket;
         this.encrption = CipherFactory.create("Caesar");
+        this.availableClientList = availableClientList;
     }
 
-    public ObjectInputStream getListAvailableClients() throws IOException{
-        ObjectInputStream result = null;
-
-        return result;
+    public List<String> getAvailableClientList() {
+        return this.availableClientList;
     }
 
     @Override
     public void run() {
 
         // Cipher
-        try (ObjectInputStream reader = new ObjectInputStream(this.clientSocket.getInputStream()))
+        try (ObjectInputStream reader = new ObjectInputStream(this.serverSocket.getInputStream()))
         {
             ContactList line = null;
             //String key = reader.readObject();
 
-            while (( line = ((ContactList) reader.readObject()) ) != null ) {
-                System.out.println("Received: " + line.getMessageBody());
-                line.getListContact().forEach(x -> System.out.println( "client: " +x));
+            while (( line = (ContactList) reader.readObject() ) != null ) {
+                if (line.getMessageBody() =="hello") {
+                    this.availableClientList.addIfAbsent( line.getListContact().get(0) );
+                }
+                else {
+                    System.out.println("Received: " + line.getMessageBody());
+                    line.getListContact().forEach(x -> {
+                                System.out.println("client: " + x);
+                                this.availableClientList.add(x);
+                            }
+                    );
+                }
             }
         }
         catch (IOException e) {

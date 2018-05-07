@@ -19,8 +19,8 @@ public class ProxyServer implements Runnable {
 
     private Integer simpleKeyCipher;
     private String aesKeyCipher;
-    private static final Map<String, Socket> clientPool = new ConcurrentHashMap<>();;
-    private static final ProxyHelper queue = new ProxyHelper();
+    private static final Map<String, Socket> clientPool = new ConcurrentHashMap<>();
+    private static final ProxyMessageHelper queue = new ProxyMessageHelper();
 
     public ProxyServer() {
         Random random = new Random();
@@ -99,6 +99,8 @@ public class ProxyServer implements Runnable {
             ObjectInputStream inputStream = new ObjectInputStream(result.getInputStream());
             cl = (ContactList) inputStream.readObject();
             clientPool.put(cl.getListContact().get(0), result);
+            System.err.println( "ilość klientów na lisicie" + cl.getListContact().size() );
+            sendAvailableClients(cl.getListContact().get(0));
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             System.err.println(e.getMessage());

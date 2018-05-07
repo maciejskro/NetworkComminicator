@@ -9,53 +9,55 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Stack;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class WriteService implements Runnable {
 
-    private Socket clientSocket;
+    private Socket serverSocket;
     private Scanner scan;
     private String name;
     private Cipher encrypt;
+    private ConcurrentLinkedQueue<ContactList> messagesToSend;
 
-    public WriteService(Socket clientSocket, String name) {
-        this.clientSocket = clientSocket;
+    public WriteService(Socket socketToServer, String name) {
+        this.serverSocket = socketToServer;
         this.scan = new Scanner(System.in);
         this.name = name;
         this.encrypt = CipherFactory.create("Caesar");
+        this.messagesToSend = new ConcurrentLinkedQueue<>();
     }
 
-    public ContactList presentMe(ObjectOutputStream printWriter) {
-        ContactList result = null;
-        try {
-            List<String> names = new ArrayList<>();
-            names.add(this.name);
-            result = new ContactList(names, null);
 
-            printWriter.writeObject(result);
-            printWriter.flush();
-            return result;
-        } catch (IOException e) {
-            System.out.println("error");
-            e.printStackTrace();
-        }
-        return result;
+    private ContactList getMessages(List<String> listTo, String messages) {
+        System.out.println("Send message:");
+        String line = this.scan.nextLine();
+        // przygotuj message od klienta
+        ContactList cl = new ContactList(listTo, line);
+        return  cl;
     }
+
+    public void addMessageToQueue(ContactList messages) {
+        this.messagesToSend.add( messages);
+    }
+
 
     @Override
     public void run() {
-        try (ObjectOutputStream printWriter = new ObjectOutputStream(clientSocket.getOutputStream())) {
-            presentMe(printWriter);
+        try (ObjectOutputStream printWriter = new ObjectOutputStream(serverSocket.getOutputStream())) {
 
-            while (clientSocket.isConnected()) {
+            while (serverSocket.isConnected()) {
                 //Odczytaj linijke od klienta
-                System.out.println("Send message: ");
-                String line = this.scan.nextLine();
-                //Odpowiedz do klienta
-                ContactList cl = new ContactList(null, line);
-                printWriter.writeObject(cl);
-                //printWriter.println("Response from client: " + line);
-                //flush - wypchnij z bufora
-                printWriter.flush();
+
+                if ( messagesToSend.isEmpty() ) {
+                    ContactList cl = getMessages(null,null);
+                    this.messagesToSend.add(cl);
+                } else {
+                    printWriter.writeObject(this.messagesToSend.poll());
+                    //printWriter.println("Response from client: " + line);
+                    //flush - wypchnij z bufora
+                    printWriter.flush();
+                }
             }
         } catch (IOException e) {
             System.out.println("error");

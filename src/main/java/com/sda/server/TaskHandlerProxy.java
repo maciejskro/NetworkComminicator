@@ -59,6 +59,8 @@ public class TaskHandlerProxy implements Runnable {
             System.err.println("IO Exception  socket closed or somthings");
             e.printStackTrace();
         }
+    }
+    protected void sendMessageToList(ContactList cl) {
 
     }
 

@@ -4,12 +4,12 @@ import com.sda.client.ContactList;
 
 import java.util.Stack;
 
-public class ProxyHelper  {
+public class ProxyMessageHelper {
 
     private Stack<ContactList> stack;
 
-    ProxyHelper() {
-        this.stack = new Stack();
+    ProxyMessageHelper() {
+        this.stack = new Stack<>();
     }
 
     ContactList pop() {
